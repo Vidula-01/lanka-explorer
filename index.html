@@ -31,9 +31,21 @@
   <main>
     <!-- Hero banner -->
     <section id="hero">
-      <h1>Discover the Pearl of the Indian Ocean</h1>
-      <p>Ancient cities, golden beaches, misty hills and wild elephants, all in one island.</p>
-      <a href="destinations.html" class="btn">Start Exploring</a>
+      <!-- Slideshow background layers -->
+      <div class="hero-slides">
+        <div class="hero-slide active" style="background-image: url('images/sigiriya.png')"></div>
+        <div class="hero-slide" style="background-image: url('images/1.jpg')"></div>
+        <div class="hero-slide" style="background-image: url('images/2.jpg')"></div>
+        <div class="hero-slide" style="background-image: url('images/3.jpg')"></div>
+        <div class="hero-slide" style="background-image: url('images/4.jpg')"></div>
+      </div>
+      <!-- Overlay + content -->
+      <div class="hero-overlay"></div>
+      <div class="hero-content">
+        <h1>Discover the Pearl of the Indian Ocean</h1>
+        <p>Ancient cities, golden beaches, misty hills and wild elephants, all in one island.</p>
+        <a href="destinations.html" class="btn">Start Exploring</a>
+      </div>
     </section>
 
     <!-- Category highlights -->
@@ -175,6 +187,6 @@
     </div>
   </footer>
 
-  <script src="js/app.js"></script>
+  <script src="js/app.js?v=2"></script>
 </body>
 </html>

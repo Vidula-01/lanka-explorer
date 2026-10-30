@@ -337,13 +337,16 @@ function addBaseLayer(map) {
 }
 
 // Red marker icon using Leaflet's built-in marker image with a red tint via CSS filter
-const redIcon = L.divIcon({
-  className: '',
-  html: '<div class="red-marker"></div>',
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34]
-});
+function getRedIcon() {
+  if (typeof L === 'undefined') return undefined;
+  return L.divIcon({
+    className: '',
+    html: '<div class="red-marker"></div>',
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34]
+  });
+}
 
 // One destination, one pin (details page)
 function showMap(place) {
@@ -359,7 +362,8 @@ function showMap(place) {
   const map = L.map('map').setView([place.lat, place.lng], 13);
   addBaseLayer(map);
 
-  L.marker([place.lat, place.lng], { icon: redIcon })
+  const markerOptions = getRedIcon() ? { icon: getRedIcon() } : {};
+  L.marker([place.lat, place.lng], markerOptions)
     .addTo(map)
     .bindPopup(`<strong>${place.name}</strong><br>${place.district} District`)
     .openPopup();
@@ -379,8 +383,11 @@ function showAllDestinationsMap(destinations) {
   addBaseLayer(map);
 
   const points = [];
+  const icon = getRedIcon();
+  const markerOptions = icon ? { icon } : {};
+
   for (const place of destinations) {
-    L.marker([place.lat, place.lng], { icon: redIcon })
+    L.marker([place.lat, place.lng], markerOptions)
       .addTo(map)
       .bindPopup(`
         <strong>${place.name}</strong><br>
@@ -399,11 +406,16 @@ const TRAVELLERS_KEY = 'lankaExplorerTravellers';
 
 // Returns the saved trip as an array of ids, or an empty array
 function getTrip() {
-  const saved = localStorage.getItem(TRIP_KEY);
-  if (saved === null) {
+  try {
+    const saved = localStorage.getItem(TRIP_KEY);
+    if (!saved) {
+      return [];
+    }
+    const parsed = JSON.parse(saved);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (error) {
     return [];
   }
-  return JSON.parse(saved);
 }
 
 // Saves the trip and updates the counter in the navigation
@@ -611,13 +623,13 @@ async function initTripPage() {
       destGrid.appendChild(card);
     }
 
-    // "Add selected" button — append after grid
+    // "Add selected" button — inside the panel, after grid
     let addSelectedRow = document.querySelector('#add-selected-row');
     if (!addSelectedRow) {
       addSelectedRow = document.createElement('div');
       addSelectedRow.id = 'add-selected-row';
       addSelectedRow.innerHTML = '<button type="button" id="add-selected-btn" disabled>Add selected</button>';
-      destGrid.parentElement.appendChild(addSelectedRow);
+      document.querySelector('#add-dest-panel').appendChild(addSelectedRow);
 
       document.querySelector('#add-selected-btn').addEventListener('click', function () {
         for (const id of pendingIds) {
@@ -730,12 +742,10 @@ async function initTripPage() {
   });
 
   clearButton.addEventListener('click', function () {
-    if (confirm('Remove every destination from your trip?')) {
-      saveTrip([]);
-      renderTrip();
-      if (addDestToggle.getAttribute('aria-expanded') === 'true') {
-        refreshGrid();
-      }
+    saveTrip([]);
+    renderTrip();
+    if (addDestToggle.getAttribute('aria-expanded') === 'true') {
+      refreshGrid();
     }
   });
 
@@ -802,10 +812,76 @@ function initEnquiryForm() {
   });
 }
 
-// ===== 8. START THE APP =====
+// ===== 8. HERO SLIDESHOW =====
+// Cycles through .hero-slide elements every 10 seconds with a smooth cross-fade.
+function initHeroSlideshow() {
+  const slides = document.querySelectorAll('.hero-slide');
+  if (!slides || slides.length < 2) return;
+
+  const INTERVAL_MS = 10000;  // 10 seconds between slides
+  const FADE_MS     = 1500;   // 1.5s fade duration (matches CSS transition)
+
+  // Preload slide images so transitions are seamless with no loading delay
+  const slideImages = [
+    'images/sigiriya.png',
+    'images/1.jpg',
+    'images/2.jpg',
+    'images/3.jpg',
+    'images/4.jpg'
+  ];
+  slideImages.forEach(function (src) {
+    const img = new Image();
+    img.src = src;
+  });
+
+  let current = 0;
+  let zCounter = 1;
+
+  // Initialize slides: first one visible, others hidden
+  slides.forEach(function (slide, idx) {
+    if (idx === 0) {
+      slide.classList.add('active');
+      slide.style.zIndex = '1';
+      slide.style.opacity = '1';
+    } else {
+      slide.classList.remove('active');
+      slide.style.zIndex = '0';
+      slide.style.opacity = '0';
+    }
+  });
+
+  setInterval(function () {
+    const next = (current + 1) % slides.length;
+    zCounter++;
+
+    // Lift the next slide directly on top of the current one and fade it in
+    slides[next].style.zIndex = zCounter;
+    slides[next].style.opacity = '1';
+    slides[next].classList.add('active');
+
+    const previous = current;
+    current = next;
+
+    // After the fade completes, retire the previous slide
+    setTimeout(function () {
+      slides[previous].classList.remove('active');
+      slides[previous].style.opacity = '0';
+
+      // Keep zCounter bounded
+      if (zCounter > 500) {
+        zCounter = 1;
+        slides[current].style.zIndex = '1';
+      }
+    }, FADE_MS);
+
+  }, INTERVAL_MS);
+}
+
+// ===== 9. START THE APP =====
 updateTripCount();
 initHomePage();
 initDestinationsPage();
 initDetailsPage();
 initTripPage();
 initEnquiryForm();
+initHeroSlideshow();
