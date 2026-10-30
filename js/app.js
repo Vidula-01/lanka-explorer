@@ -534,11 +534,11 @@ async function initTripPage() {
   const tableBody = document.querySelector('#trip-table tbody');
   if (!tableBody) return;   // not on the My Trip page
 
-  const summary = document.querySelector('#trip-summary');
+  const summary         = document.querySelector('#trip-summary');
   const travellersInput = document.querySelector('#travellers');
-  const totalUsdCell = document.querySelector('#total-usd');
-  const totalLkrCell = document.querySelector('#total-lkr');
-  const clearButton = document.querySelector('#clear-trip');
+  const totalUsdCell    = document.querySelector('#total-usd');
+  const totalLkrCell    = document.querySelector('#total-lkr');
+  const clearButton     = document.querySelector('#clear-trip');
 
   showLoading(summary, 'Loading your trip...');
 
@@ -561,6 +561,111 @@ async function initTripPage() {
 
   // Restore the saved number of travellers
   travellersInput.value = localStorage.getItem(TRAVELLERS_KEY) || 1;
+
+  // ---- Destination picker card grid ----
+  const destGrid       = document.querySelector('#dest-grid');
+  const addDestToggle  = document.querySelector('#add-dest-toggle');
+  const addDestHeader  = document.querySelector('#add-dest-header');
+
+  // Track which cards the user has ticked (before hitting Add Selected)
+  let pendingIds = new Set();
+
+  // Build / rebuild the card grid (called after every add/remove)
+  function refreshGrid() {
+    const tripIds = getTrip();
+    const available = allDestinations.filter(p => !tripIds.includes(p.id));
+    pendingIds = new Set();   // clear pending selections on rebuild
+
+    destGrid.innerHTML = '';
+
+    if (available.length === 0) {
+      destGrid.innerHTML = '<p style="grid-column:1/-1;color:var(--grey)">All destinations are already in your trip!</p>';
+      updateAddSelectedBtn();
+      return;
+    }
+
+    for (const place of available) {
+      const card = document.createElement('div');
+      card.className = 'dest-pick-card';
+      card.dataset.id = place.id;
+      card.innerHTML = `
+        <img src="${place.image}" alt="${place.name}" loading="lazy">
+        <span class="pick-name">${place.name}</span>
+        <span class="pick-cat">${place.category}</span>
+        <span class="pick-check"></span>
+      `;
+
+      card.addEventListener('click', function () {
+        if (pendingIds.has(place.id)) {
+          pendingIds.delete(place.id);
+          card.classList.remove('selected');
+          card.querySelector('.pick-check').textContent = '';
+        } else {
+          pendingIds.add(place.id);
+          card.classList.add('selected');
+          card.querySelector('.pick-check').textContent = '✓';
+        }
+        updateAddSelectedBtn();
+      });
+
+      destGrid.appendChild(card);
+    }
+
+    // "Add selected" button — append after grid
+    let addSelectedRow = document.querySelector('#add-selected-row');
+    if (!addSelectedRow) {
+      addSelectedRow = document.createElement('div');
+      addSelectedRow.id = 'add-selected-row';
+      addSelectedRow.innerHTML = '<button type="button" id="add-selected-btn" disabled>Add selected</button>';
+      destGrid.parentElement.appendChild(addSelectedRow);
+
+      document.querySelector('#add-selected-btn').addEventListener('click', function () {
+        for (const id of pendingIds) {
+          addToTrip(id);
+        }
+        renderTrip();
+        refreshGrid();
+        // Close the panel after adding
+        destGrid.hidden = true;
+        addSelectedRow.hidden = true;
+        addDestToggle.textContent = 'Show ▾';
+        addDestToggle.setAttribute('aria-expanded', 'false');
+      });
+    }
+    updateAddSelectedBtn();
+  }
+
+  function updateAddSelectedBtn() {
+    const btn = document.querySelector('#add-selected-btn');
+    if (!btn) return;
+    btn.disabled = pendingIds.size === 0;
+    btn.textContent = pendingIds.size > 0
+      ? `Add selected (${pendingIds.size})`
+      : 'Add selected';
+  }
+
+  // Toggle show/hide the grid
+  function openPanel() {
+    destGrid.hidden = false;
+    const row = document.querySelector('#add-selected-row');
+    if (row) row.hidden = false;
+    addDestToggle.textContent = 'Hide ▴';
+    addDestToggle.setAttribute('aria-expanded', 'true');
+    refreshGrid();
+  }
+
+  function closePanel() {
+    destGrid.hidden = true;
+    const row = document.querySelector('#add-selected-row');
+    if (row) row.hidden = true;
+    addDestToggle.textContent = 'Show ▾';
+    addDestToggle.setAttribute('aria-expanded', 'false');
+  }
+
+  addDestHeader.addEventListener('click', function () {
+    const isOpen = addDestToggle.getAttribute('aria-expanded') === 'true';
+    if (isOpen) { closePanel(); } else { openPanel(); }
+  });
 
   function renderTrip() {
     const tripIds = getTrip();
@@ -612,6 +717,10 @@ async function initTripPage() {
       const id = Number(event.target.dataset.id);
       removeFromTrip(id);
       renderTrip();
+      // If the picker grid is open, refresh it so removed destination reappears
+      if (addDestToggle.getAttribute('aria-expanded') === 'true') {
+        refreshGrid();
+      }
     }
   });
 
@@ -624,6 +733,9 @@ async function initTripPage() {
     if (confirm('Remove every destination from your trip?')) {
       saveTrip([]);
       renderTrip();
+      if (addDestToggle.getAttribute('aria-expanded') === 'true') {
+        refreshGrid();
+      }
     }
   });
 

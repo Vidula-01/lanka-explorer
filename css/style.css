@@ -377,6 +377,134 @@ textarea:focus {
 }
 
 /* ===== 11. TRIP TABLE ===== */
+
+/* ---- Add destination panel ---- */
+#add-dest-panel {
+  background: var(--white);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  margin-bottom: 1.5rem;
+  overflow: hidden;
+}
+
+#add-dest-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  cursor: pointer;
+}
+
+#add-dest-title {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 600;
+  font-size: 1rem;
+  color: var(--primary-dark);
+}
+
+#add-dest-toggle {
+  background: var(--primary);
+  color: var(--white);
+  padding: 0.4rem 1.1rem;
+  border-radius: 50px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  transition: background 0.2s;
+}
+
+#add-dest-toggle:hover {
+  background: var(--primary-dark);
+}
+
+/* Destination card grid */
+#dest-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 0.75rem;
+  padding: 0 1.5rem 1.5rem;
+}
+
+/* Each selectable destination card */
+.dest-pick-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.85rem 0.75rem;
+  border: 2px solid #d8e4e4;
+  border-radius: var(--radius);
+  background: var(--light);
+  cursor: pointer;
+  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+  text-align: center;
+  user-select: none;
+}
+
+.dest-pick-card:hover {
+  border-color: var(--primary);
+  box-shadow: 0 4px 12px rgba(11,110,110,0.12);
+}
+
+.dest-pick-card.selected {
+  border-color: var(--primary);
+  background: #e6f4f4;
+  box-shadow: 0 4px 12px rgba(11,110,110,0.18);
+}
+
+.dest-pick-card img {
+  width: 100%;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.dest-pick-card .pick-name {
+  font-weight: 700;
+  font-size: 0.88rem;
+  color: var(--primary-dark);
+  line-height: 1.2;
+}
+
+.dest-pick-card .pick-cat {
+  font-size: 0.78rem;
+  color: var(--grey);
+}
+
+.dest-pick-card .pick-check {
+  font-size: 1.1rem;
+  color: var(--primary);
+  font-weight: 700;
+  min-height: 1.3rem;
+}
+
+/* "Add selected" button row */
+#add-selected-row {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0 1.5rem 1.25rem;
+}
+
+#add-selected-btn {
+  background: var(--primary);
+  color: var(--white);
+  padding: 0.6rem 1.6rem;
+  border-radius: 50px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  transition: background 0.2s, transform 0.15s;
+}
+
+#add-selected-btn:hover {
+  background: var(--primary-dark);
+  transform: translateY(-1px);
+}
+
+#add-selected-btn:disabled {
+  background: #a0b8b8;
+  cursor: not-allowed;
+  transform: none;
+}
+
 #trip-table {
   width: 100%;
   border-collapse: collapse;
@@ -945,6 +1073,37 @@ body.dark .menu-toggle {
 
 body.dark #add-to-trip.added {
   color: #1d2b2b;
+}
+
+/* Dark mode — add destination panel */
+body.dark #add-dest-panel {
+  background: #1e2e2e;
+}
+
+body.dark .dest-pick-card {
+  background: #162424;
+  border-color: #2e4444;
+}
+
+body.dark .dest-pick-card:hover {
+  border-color: var(--primary);
+}
+
+body.dark .dest-pick-card.selected {
+  background: #1a3838;
+  border-color: var(--primary);
+}
+
+body.dark .dest-pick-card .pick-name {
+  color: var(--light);
+}
+
+body.dark #add-dest-toggle {
+  color: var(--white);
+}
+
+body.dark #add-selected-btn {
+  color: var(--white);
 }
 
 body.dark #trip-table thead {
